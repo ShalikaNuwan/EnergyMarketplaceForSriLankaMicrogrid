@@ -43,9 +43,6 @@ class GeneralPriceAlgorithm:
     
 
 
-
-
-
 new = GeneralPriceAlgorithm(10,24,True,True,133)
 new.calculatePrice(10,20)
     
