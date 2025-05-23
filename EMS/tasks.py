@@ -4,6 +4,24 @@ from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
 from typing import List
 
+class HourlyMatch(BaseModel):
+    time : str
+    solar : float
+    demand : float
+    solar_excess : bool
+    solar_excess_energy : float
+    battery_usage: float
+    charging_status : bool
+    soc : float
+    demand_shortage : bool
+    demand_shortage_amount : float
+    generator_used : bool
+    generator_capacity : float
+    
+class EMSMatchProfile(BaseModel):
+    matched_results: List[HourlyMatch]
+
+parser = PydanticOutputParser(pydantic_object=EMSMatchProfile)
 
 ems_matching = Task(
     description=(
@@ -24,7 +42,7 @@ ems_matching = Task(
             the battery usage is positive if the battery is discharged. Otherwise it's negative value. The battery Soc value cannot be grater than '96%' and less than 30%.
             Solar_Excess valus need to determined after allocating the energy to the battery."""
     ),
-    expected_output="JSON file containing the next 24 hours hourly matched energy profiles",
+    expected_output="JSON file containing the next 24 hours hourly matched energy profiles with the structure of " + parser.get_format_instructions(),
     agent=ems_agent,
     output_file='ems.json'
 )
@@ -39,7 +57,7 @@ optimum_gen_level = Task(
         "If there is any usage in the generator, use above levels to decide the optimum level."
         "after set the working level of the generator, if there is any excess enery from the generator, then allocate that energy to the battery and set the soc considering the stored energy."
     ),
-    expected_output="JSON file containing the next 24 hours hourly matched energy profiles",
+    expected_output="JSON file containing the next 24 hours hourly matched energy profiles with the structure of " + parser.get_format_instructions(),
     context=[ems_matching],
     agent=genAgent,
     output_file='optimum_gen.json'
