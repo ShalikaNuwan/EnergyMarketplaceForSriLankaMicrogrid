@@ -44,7 +44,17 @@ genAgent = Agent(
     ),
     llm=llm
 )
-agents: list[Agent] = [ems_agent,genAgent]
+
+battery_agent = Agent(
+    role="Expert of Battery Management",
+    goal="Manage battery soc level considering the solar surlus or generator surplus.",
+    backstory=(
+        "You are an energy expert who knows how to run the battery and calculate the battery soc correcly."
+    ),
+    llm=llm
+)
+
+agents: list[Agent] = [ems_agent,genAgent,battery_agent]
 
 __all__ = ['agents','ems_agent','genAgent']
     

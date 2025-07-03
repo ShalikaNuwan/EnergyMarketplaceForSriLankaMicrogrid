@@ -1,5 +1,5 @@
 from crewai import Task
-from agent import ems_agent,genAgent
+from agent import ems_agent,genAgent,battery_agent
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
 from typing import List
@@ -62,5 +62,23 @@ optimum_gen_level = Task(
     agent=genAgent,
     output_file='optimum_gen.json'
 )
-tasks: list[Task] = [ems_matching,optimum_gen_level]
+
+final_profile = Task(
+    description=(
+        "The task is to Calculate the final soc level of the batery considering the Generator surplus."
+        "consider the optimum_gen.json file and if the generator_used is true then do the following tasks."
+        "the soc in each hour is the end soc after working in that hour."
+        "The generator is working at some constant levels which can be greater than the demand_shortage_amount in each hour."
+        "you need to calculate the excess energy due to the generator and allocate that energy to the battery. Then calculate the new soc."
+        "the optimum_gen.json gives the soc as a percentage value, so you need to convert that to kWh value (battery capacity is 288kWh) and the allocate the surplus energy to get the final value and then devide 288 to get the new soc."
+        ""
+    ),
+    expected_output="JSON file containing the next 24 hours hourly matched energy profiles with the structure of " + parser.get_format_instructions(),
+    context=[optimum_gen_level],
+    agent=battery_agent,
+    output_file='final_profile.json'
+    
+    
+)
+tasks: list[Task] = [ems_matching,optimum_gen_level,final_profile]
 __all__ = ['tasks']
