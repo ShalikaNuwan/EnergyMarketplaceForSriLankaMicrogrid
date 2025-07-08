@@ -45,6 +45,6 @@ def weather_data_to_dataframe(weather_json: dict) -> pd.DataFrame:
 
 
 weatherJson = get_weather_data()
-df = weather_data_to_dataframe(weatherJson)
-print(df)
-    
+weather_df = weather_data_to_dataframe(weatherJson)
+
+print(weather_df)
