@@ -4,8 +4,14 @@ import sys
 import pandas as pd
 import json
 from dotenv import load_dotenv
+from datetime import datetime,timedelta
 
-                
+def get_current_time():
+    current_time = datetime.now()
+    starting_time = current_time + timedelta(hours=1)
+    filter_date = datetime(starting_time.year, starting_time.month, starting_time.day, starting_time.hour, 0, 0).strftime('%Y-%m-%d %H:%M:%S')
+    return filter_date
+                 
 def get_weather_data():
     load_dotenv()
     weatherAPIKey = os.getenv('WEATHER_API_KEY')
@@ -33,12 +39,12 @@ def weather_data_to_dataframe(weather_json: dict) -> pd.DataFrame:
     df = pd.DataFrame(rows)
     df["datetime"] = pd.to_datetime(df["datetime"])
     df.set_index('datetime',inplace=True)
+    filter_date = get_current_time()
+    df = df[df.index >= filter_date].head(24)
     return df
 
 
 weatherJson = get_weather_data()
 df = weather_data_to_dataframe(weatherJson)
-
-filtered_df = df
 print(df)
     
