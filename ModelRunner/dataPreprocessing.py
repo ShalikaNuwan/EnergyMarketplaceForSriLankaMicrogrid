@@ -1,15 +1,20 @@
-from getWeatherData import get_weather_data,weather_data_to_dataframe
+from getWeatherData import get_weather_data,weather_data_to_dataframe,get_current_time
 import pickle
 from sklearn.preprocessing import LabelEncoder
-
-
+import os
+from dotenv import load_dotenv
+from azure.cosmos import CosmosClient
+import pandas as pd
+import numpy as np
 
 #data preprocessing for the RandomForest model
 def load_scaler(type):
     if type == 'gen':
         with open('ModelRunner/genScalerRF.pkl', 'rb') as f:
             loaded_scaler = pickle.load(f)
-
+    if type == 'irr':
+        with open('ModelRunner/irrScaler.pkl', 'rb') as f:
+            loaded_scaler = pickle.load(f)
     return loaded_scaler
 
 
@@ -23,7 +28,7 @@ def load_label_encoders(type):
 
 def create_input_rf():
     weatherJson = get_weather_data()
-    weather_df = weather_data_to_dataframe(weatherJson)
+    _,weather_df = weather_data_to_dataframe(weatherJson)
     weather_encoder = load_label_encoders('WeatherConditions')
     weather_df['conditions_encoded'] = weather_encoder.transform(weather_df['conditions'])
     weather_df['month'] = weather_df.index.month
@@ -33,11 +38,57 @@ def create_input_rf():
     x = weather_df[['temp','humidity','windgust','solarradiation','conditions_encoded','month','day','day_of_week','day_of_year']]
     
     return x
-    
-    
-    
-    
-    
-    
+       
 #data preprocessing for the LTSM model
+def load_database():
+    load_dotenv()
+    primary_key = os.getenv('COSMOS_DB_KEY')
+    database_url = os.getenv('COSMOS_DB_URL')
+    database_name = os.getenv('DATABASE')
+    container_name = os.getenv('CONTAINER')
+    
+    client = CosmosClient(database_url,credential=primary_key)
+    database = client.get_database_client(database_name)
+    container = database.get_container_client(container_name)
+    return container
+
+def get_historical_generation():
+    container = load_database()
+    _,last_hour = get_current_time()
+    
+    next_day_query = f"""
+    SELECT TOP 48 * FROM c
+    WHERE c.id <= "{last_hour}" 
+    """
+    last_48_hours_generation = list(container.query_items(
+        query=next_day_query,
+        enable_cross_partition_query=True
+    ))
+    
+    return last_48_hours_generation
+    
+
+def create_input_lstm(query_output):
+    df = pd.DataFrame(query_output)
+    genScaler = load_scaler('gen')
+    irrScaler = load_scaler('irr')
+    df = df.rename(columns={'SolarGeneration': 'Adjusted_Generation'})
+    df = df.rename(columns={'irradiation': 'solarradiation'})
+    df['Adjusted_Generation'] = genScaler.transform(df[['Adjusted_Generation']])
+    df['solarradiation'] = irrScaler.transform(df[['solarradiation']])
+    
+    genArr = df['Adjusted_Generation'].to_list()
+    irrArr = df['solarradiation'].to_list()
+    x = np.array([genArr,irrArr])
+    
+    return x,genArr,irrArr
+    
+
+
+
+    
+    
+
+
+
 
