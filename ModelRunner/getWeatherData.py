@@ -9,8 +9,10 @@ from datetime import datetime,timedelta
 def get_current_time():
     current_time = datetime.now()
     starting_time = current_time + timedelta(hours=1)
+    previous_hour = current_time - timedelta(hours=1)
     filter_date = datetime(starting_time.year, starting_time.month, starting_time.day, starting_time.hour, 0, 0).strftime('%Y-%m-%d %H:%M:%S')
-    return filter_date
+    previous_hour_str = datetime(previous_hour.year, previous_hour.month, previous_hour.day, previous_hour.hour, 0, 0).strftime('%Y-%m-%d %H:%M:%S')
+    return filter_date,previous_hour_str
                  
 def get_weather_data():
     load_dotenv()
@@ -39,12 +41,7 @@ def weather_data_to_dataframe(weather_json: dict) -> pd.DataFrame:
     df = pd.DataFrame(rows)
     df["datetime"] = pd.to_datetime(df["datetime"])
     df.set_index('datetime',inplace=True)
-    filter_date = get_current_time()
-    df = df[df.index >= filter_date].head(24)
-    return df
+    filter_date,_ = get_current_time()
+    filered_df = df[df.index >= filter_date].head(24)
+    return df,filered_df
 
-
-weatherJson = get_weather_data()
-weather_df = weather_data_to_dataframe(weatherJson)
-
-print(weather_df)
