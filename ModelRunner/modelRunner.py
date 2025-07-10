@@ -3,6 +3,8 @@ from getWeatherData import get_weather_data,weather_data_to_dataframe
 import pickle
 from keras.models import load_model
 import numpy as np
+import pandas as pd
+
 
 def load_Model(type):
     if type == 'genRF':
@@ -10,7 +12,8 @@ def load_Model(type):
             model= pickle.load(f)
     if type == 'genLSTM':
         model = load_model('ModelRunner/24-0.0019.ckpt')
-    
+    if type == 'neuralNetwork':
+        model = load_model('ModelRunner/NNmodelnew')
     return model
 
 def run_RF():
@@ -18,7 +21,7 @@ def run_RF():
     rf_model = load_Model('genRF')
     genScaler = load_scaler('gen')
     predictions = rf_model.predict(rf_input)
-    predictions_non_scaled = genScaler.inverse_transform([predictions])
+    predictions_non_scaled = genScaler.inverse_transform([predictions]).flatten()
     return predictions_non_scaled
 
 
@@ -47,11 +50,29 @@ def run_lstm():
         x = np.array([genArr,irrArr])
         x = np.expand_dims(x, axis=0)
         
-    return irrForecastArr
+    return predictionsArr
 
+def create_input_for_hybrid_model():
+    rfArr = np.array(run_RF())
+    lstmArr = np.array(run_lstm())
+    temp_df = pd.DataFrame({
+        'Predicted_Generation_LSTM' : lstmArr,
+        'Predicted_Generation_rf' : rfArr
+    })
+    rfScaler = load_scaler('rf')
+    lstmScaler = load_scaler('lstm')
+    temp_df['Predicted_Generation_LSTM'] = lstmScaler.transform(temp_df[['Predicted_Generation_LSTM']])
+    temp_df['Predicted_Generation_rf'] = rfScaler.transform(temp_df[['Predicted_Generation_rf']])
+    input_arr = temp_df[['Predicted_Generation_LSTM', 'Predicted_Generation_rf']].values
+    return input_arr
+    
 
-
-
-
+def run_hybrid():
+    model = load_Model('neuralNetwork')
+    genScaler = load_scaler('nn')
+    inputArr = create_input_for_hybrid_model()
+    predictions = model.predict(inputArr)
+    predictions_non_scaled = genScaler.inverse_transform(predictions).flatten()
+    return predictions_non_scaled
 
 
