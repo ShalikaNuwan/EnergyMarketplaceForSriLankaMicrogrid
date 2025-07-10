@@ -15,6 +15,15 @@ def load_scaler(type):
     if type == 'irr':
         with open('ModelRunner/irrScaler.pkl', 'rb') as f:
             loaded_scaler = pickle.load(f)
+    if type == 'nn':
+        with open('ModelRunner/nnScaler.pkl', 'rb') as f:
+            loaded_scaler = pickle.load(f)
+    if type =='rf':
+        with open('ModelRunner/predrfScaler.pkl', 'rb') as f:
+            loaded_scaler = pickle.load(f)
+    if type == 'lstm':
+        with open('ModelRunner/predLstmScaler.pkl', 'rb') as f:
+            loaded_scaler = pickle.load(f)
     return loaded_scaler
 
 
