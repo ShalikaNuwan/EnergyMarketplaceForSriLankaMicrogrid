@@ -8,12 +8,15 @@ from datetime import datetime,timedelta
 
 def get_current_time():
     current_time = datetime.now()
-    starting_time = current_time + timedelta(hours=1)
     previous_hour = current_time - timedelta(hours=1)
-    filter_date = datetime(starting_time.year, starting_time.month, starting_time.day, starting_time.hour, 0, 0).strftime('%Y-%m-%d %H:%M:%S')
+    endtime = current_time + timedelta(hours=24)
+    filter_date = datetime(current_time.year, current_time.month, current_time.day, current_time.hour, 0, 0).strftime('%Y-%m-%d %H:%M:%S')
     previous_hour_str = datetime(previous_hour.year, previous_hour.month, previous_hour.day, previous_hour.hour, 0, 0).strftime('%Y-%m-%d %H:%M:%S')
-    return filter_date,previous_hour_str
-                 
+    endtime_str = datetime(endtime.year, endtime.month, endtime.day, endtime.hour, 0, 0).strftime('%Y-%m-%d %H:%M:%S')
+    datetime_list = pd.date_range(start=filter_date, end=endtime_str, freq='h')
+    return filter_date,previous_hour_str,datetime_list
+
+ 
 def get_weather_data():
     load_dotenv()
     weatherAPIKey = os.getenv('WEATHER_API_KEY')
