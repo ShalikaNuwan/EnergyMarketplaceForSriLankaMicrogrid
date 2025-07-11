@@ -1,16 +1,18 @@
 from crewai import Agent
 from llm import llm
 from crewai.tools import tool
+from ModelRunner.modelRunner import run_hybrid,runDemandLSTM
+
 
 @tool('getSolarData')
 def get_solar_data() -> list:
     """Returns hourly solar generation data for the microgrid in kWh."""
-    return [0, 0, 0, 0, 0, 0, 0, 0,3.700453992, 0, 0, 3.49084165,8.15493203, 7.3358267, 8.49920984, 4.18710535,8.38220007, 3.992326684, 5.780816585, 0.949614256,0, 0, 0]
+    return run_hybrid()
 
 @tool('getDemandData')
 def get_demand_data() -> list:
     """Returns hourly energy demand data for the microgrid in kWh."""
-    return [4.52927534, 4.078508217, 4.024205961, 3.954138532, 3.905091332, 3.810500305,3.946547894, 3.920272609, 6.356867425, 1.8013168, 8.87812705, 5.667287152,6.08302056, 5.586709611, 5.71166319, 5.278996823, 8.386487262, 6.880037554,11.99256585, 17.52468125, 23.29333262, 12.96364201, 9.831627969, 4.307296]
+    return runDemandLSTM()
 
 @tool('getBatterySoc')
 def get_battery_soc() -> float:
