@@ -1,4 +1,4 @@
-from dataPreprocessing import create_input_rf,load_scaler,get_historical_generation,create_input_lstm
+from dataPreprocessing import create_input_rf,load_scaler,get_historical_generation,create_input_lstm,create_demand_sequence
 from getWeatherData import get_weather_data,weather_data_to_dataframe
 import pickle
 from keras.models import load_model
@@ -14,6 +14,9 @@ def load_Model(type):
         model = load_model('ModelRunner/24-0.0019.ckpt')
     if type == 'neuralNetwork':
         model = load_model('ModelRunner/NNmodelnew')
+    if type == 'demand':
+        model = load_model('ModelRunner/demandLSTM.ckpt')
+        
     return model
 
 def run_RF():
@@ -76,3 +79,15 @@ def run_hybrid():
     return predictions_non_scaled
 
 
+def runDemandLSTM():
+    seq = create_demand_sequence()
+    model = load_Model('demand')
+    scaler = load_scaler('demand')
+    predictionsArr = []
+    for i in range(24):
+        predictions = model.predict([[seq]])
+        pred_ns = scaler.inverse_transform(predictions).flatten()[0]
+        predictionsArr.append(pred_ns)
+        seq.append(pred_ns)
+        seq = seq[1:]
+    return predictionsArr
