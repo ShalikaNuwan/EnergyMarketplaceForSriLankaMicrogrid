@@ -24,6 +24,9 @@ def load_scaler(type):
     if type == 'lstm':
         with open('ModelRunner/predLstmScaler.pkl', 'rb') as f:
             loaded_scaler = pickle.load(f)
+    if type == 'demand':
+        with open('ModelRunner/demandScaler.pkl', 'rb') as f:
+            loaded_scaler = pickle.load(f)
     return loaded_scaler
 
 
@@ -115,8 +118,9 @@ def download_demand_data():
 
 def create_demand_sequence():
     demand_df = pd.DataFrame(download_demand_data())
+    scaler = load_scaler('demand')
+    demand_df['redistributed'] = scaler.transform(demand_df[['redistributed']])
     sequence = demand_df['redistributed'].to_list()
+    
     return sequence
     
-
-
