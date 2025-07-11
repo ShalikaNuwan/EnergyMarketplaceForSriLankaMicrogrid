@@ -49,32 +49,35 @@ def create_input_rf():
     return x
        
 #data preprocessing for the LTSM model
-def load_database():
+def load_database(type):
     load_dotenv()
     primary_key = os.getenv('COSMOS_DB_KEY')
     database_url = os.getenv('COSMOS_DB_URL')
     database_name = os.getenv('DATABASE')
-    container_name = os.getenv('CONTAINER')
-    
+    if type == 'solarActual':
+        container_name = 'Solar Generation'
+    if type == 'demand':
+        container_name = 'demand'
     client = CosmosClient(database_url,credential=primary_key)
     database = client.get_database_client(database_name)
     container = database.get_container_client(container_name)
     return container
 
 def get_historical_generation():
-    container = load_database()
-    _,last_hour = get_current_time()
+    container = load_database('solarActual')
+    _,last_hour,_ = get_current_time()
     
     next_day_query = f"""
     SELECT TOP 48 * FROM c
     WHERE c.id <= "{last_hour}" 
+    ORDER BY c.id DESC
     """
     last_48_hours_generation = list(container.query_items(
         query=next_day_query,
         enable_cross_partition_query=True
     ))
     
-    return last_48_hours_generation
+    return last_48_hours_generation[::-1]
     
 
 def create_input_lstm(query_output):
@@ -91,13 +94,29 @@ def create_input_lstm(query_output):
     x = np.array([genArr,irrArr])
     
     return x,genArr,irrArr
+
+#data preprocessing for demand LSTM model
+def download_demand_data():
+    container = load_database('demand')
+    _,last_hour,_ = get_current_time()
+    
+    next_day_query = f"""
+    SELECT TOP 48 * FROM c
+    WHERE c.id <= "{last_hour}"
+    ORDER BY c.id DESC 
+    """
+    last_48_hours_demand = list(container.query_items(
+        query=next_day_query,
+        enable_cross_partition_query=True
+    ))
+    
+    return last_48_hours_demand[::-1]
     
 
-
-
+def create_demand_sequence():
+    demand_df = pd.DataFrame(download_demand_data())
+    sequence = demand_df['redistributed'].to_list()
+    return sequence
     
-    
-
-
 
 
