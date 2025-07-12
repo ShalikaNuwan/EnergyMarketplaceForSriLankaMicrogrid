@@ -10,12 +10,13 @@ from ModelRunner.getWeatherData import weather_data_to_dataframe,get_weather_dat
 def generation_of_hour():
     weather_json = get_weather_data()
     df,_ = weather_data_to_dataframe(weather_json)
-    _,previous_hour = get_current_time()
+    _,previous_hour,_ = get_current_time()
 
     df = df[df.index == previous_hour]
     generation = round((df['solarradiation']*(257.27/1000)*0.9/6.43).to_list()[0],2)
+    irradiation = df['solarradiation'].to_list()[0]
     
-    return generation,previous_hour
+    return generation,previous_hour,irradiation
 
 def fetch_data():
     load_dotenv()
@@ -28,12 +29,17 @@ def fetch_data():
     database = client.get_database_client(database_name)
     container = database.get_container_client(container_name)
     
-    solar_gen,previous_hour = generation_of_hour()
+    solar_gen,previous_hour,irr = generation_of_hour()
+    logging.info('Storing started')
     container.upsert_item({
         'id' : previous_hour,
         'Location' : 'UoM',
-        'SolarGeneration' : solar_gen
+        'SolarGeneration' : solar_gen,
+        'irradiation' : irr
+        
     })
+    logging.info('Storing ended')
+    
     
 app = func.FunctionApp()
 
@@ -42,6 +48,7 @@ app = func.FunctionApp()
 def DevEnergyMarketSolarActualUpload(myTimer: func.TimerRequest) -> None:
     if myTimer.past_due:
         logging.info('The timer is past due!')
+    
     fetch_data()
 
     logging.info('Python timer trigger function executed.')
