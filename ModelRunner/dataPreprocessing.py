@@ -1,4 +1,4 @@
-from getWeatherData import get_weather_data,weather_data_to_dataframe,get_current_time
+from ModelRunner.getWeatherData import get_weather_data,weather_data_to_dataframe,get_current_time
 import pickle
 from sklearn.preprocessing import LabelEncoder
 import os
@@ -59,8 +59,16 @@ def load_database(type):
     database_name = os.getenv('DATABASE')
     if type == 'solarActual':
         container_name = 'Solar Generation'
-    if type == 'demand':
+    elif type == 'demand':
         container_name = 'demand'
+    elif type=='price':
+        container_name = 'Energy_Price'
+    elif type == 'solarFCST':
+        container_name = 'GenerationForecast'
+    elif type == 'demandFCST':
+        container_name = 'demandForecast'
+    elif type == 'soc':
+        container_name = 'batterySoc'
     client = CosmosClient(database_url,credential=primary_key)
     database = client.get_database_client(database_name)
     container = database.get_container_client(container_name)
