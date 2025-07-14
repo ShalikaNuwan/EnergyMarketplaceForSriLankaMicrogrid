@@ -1,6 +1,6 @@
 from crewai import Crew,Process
-from agent import *
-from tasks import *
+from EMS.agent import *
+from EMS.tasks import *
 
 ems = Crew(
     agents=agents,
@@ -9,4 +9,5 @@ ems = Crew(
     process=Process.sequential,
 )
 
-ems.kickoff()
+def runEMS():
+    ems.kickoff()
