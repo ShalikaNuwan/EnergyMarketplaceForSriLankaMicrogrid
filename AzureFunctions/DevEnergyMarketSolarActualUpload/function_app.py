@@ -31,6 +31,7 @@ def fetch_data():
     
     solar_gen,previous_hour,irr = generation_of_hour()
     logging.info('Storing started')
+    logging.info(f'data stored for {previous_hour}')
     container.upsert_item({
         'id' : previous_hour,
         'Location' : 'UoM',
