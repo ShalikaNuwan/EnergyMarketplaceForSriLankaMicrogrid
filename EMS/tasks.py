@@ -1,5 +1,5 @@
 from crewai import Task
-from agent import ems_agent,genAgent,battery_agent
+from EMS.agent import ems_agent,genAgent,battery_agent
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
 from typing import List
@@ -76,6 +76,7 @@ final_profile = Task(
     expected_output="JSON file containing the next 24 hours hourly matched energy profiles with the structure of " + parser.get_format_instructions(),
     context=[optimum_gen_level],
     agent=battery_agent,
+    output_json=EMSMatchProfile,
     output_file='final_profile.json'
     
     

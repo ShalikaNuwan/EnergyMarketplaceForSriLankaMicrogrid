@@ -1,23 +1,25 @@
 from crewai import Agent
-from llm import llm
+from EMS.llm import llm
 from crewai.tools import tool
-from ModelRunner.modelRunner import run_hybrid,runDemandLSTM
+from ModelRunner.getDataFromDatabase import get_actual_predictions,getCurrentSOC,getSolarForecast,getDemandFCST
 
 
 @tool('getSolarData')
 def get_solar_data() -> list:
     """Returns hourly solar generation data for the microgrid in kWh."""
-    return run_hybrid()
+    _,solar_fcst_list = getSolarForecast()
+    return solar_fcst_list
 
 @tool('getDemandData')
 def get_demand_data() -> list:
     """Returns hourly energy demand data for the microgrid in kWh."""
-    return runDemandLSTM()
+    _,demand_fcst_list = getDemandFCST()
+    return demand_fcst_list
 
 @tool('getBatterySoc')
 def get_battery_soc() -> float:
     """Returns the battery soc level for the initial hour."""
-    return 40
+    return getCurrentSOC()
 
 ems_agent = Agent(
     role="Expert Energy Manager",
